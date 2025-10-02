@@ -6,7 +6,7 @@
 ## 핵심 기능
 
 
-### Teck Stacks
+### Tech Stacks
 <img src="https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white">
 <img src="https://img.shields.io/badge/flask-3BABC3?style=for-the-badge&logo=flask&logoColor=white">
 <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white">
