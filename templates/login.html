@@ -36,15 +36,40 @@
       color: #333;
     }
 
+    /* --- 1. 아이콘을 담기 위한 부모 컨테이너 스타일 추가 --- */
+    .input-container {
+        position: relative;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
     .input-field {
       width: 100%;
       padding: 12px;
-      margin-bottom: 15px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 14px;
       box-sizing: border-box;
     }
+
+    /* ID 필드에 오른쪽 패딩을 줘서 아이콘과 겹치지 않게 함 */
+    .input-field[type="password"] {
+        padding-right: 50px; /* 텍스트를 위해 공간을 조금 더 확보 */
+    }
+
+    /* --- 2. 비밀번호 토글 텍스트 스타일 수정 --- */
+    .toggle-password {
+        position: absolute;
+        top: 50%;
+        right: 15px;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #007bff; /* 테마 색상과 일치시켜 더 깔끔하게 */
+        user-select: none; /* 아이콘 텍스트가 선택되지 않도록 함 */
+        font-size: 13px; /* 텍스트에 맞게 폰트 크기 조정 */
+        font-weight: 600; /* 텍스트를 약간 굵게 */
+    }
+
 
     .btn {
       width: 100%;
@@ -69,10 +94,34 @@
     <div class="logo">🔒</div>
     <h2>Login</h2>
     <form>
-      <input type="text" placeholder="Enter your ID" class="input-field" required>
-      <input type="password" placeholder="Enter your password" class="input-field" required>
+      <!-- ID 입력 필드 -->
+      <div class="input-container">
+        <input type="text" placeholder="Enter your ID" class="input-field" required>
+      </div>
+      <!-- 비밀번호 입력 필드와 아이콘 -->
+      <div class="input-container">
+        <input type="password" placeholder="Enter your password" id="password-field" class="input-field" required>
+        <span class="toggle-password" id="toggle-password">보기</span>
+      </div>
       <button type="submit" class="btn">Sign In</button>
     </form>
   </div>
+
+  <!-- --- 3. 아이콘 클릭 이벤트를 위한 JavaScript 추가 --- -->
+  <script>
+    const togglePassword = document.getElementById('toggle-password');
+    const passwordField = document.getElementById('password-field');
+
+    togglePassword.addEventListener('click', function () {
+        // 비밀번호 필드의 타입을 'password'에서 'text'로, 또는 그 반대로 변경
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+
+        // 텍스트 내용 변경
+        this.textContent = type === 'password' ? '보기' : '숨김';
+    });
+  </script>
+
 </body>
 </html>
+
