@@ -1,16 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
-    <!--
-        <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    -->   
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f9ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background: #ffffff;
+      padding: 40px 35px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 350px;
+    }
+
+    .logo {
+      font-size: 45px;
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+
+    .login-container h2 {
+      margin-bottom: 20px;
+      font-size: 22px;
+      color: #333;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .btn:hover {
+      background: #0056b3;
+    }
+  </style>
 </head>
 <body>
-    <h1>로그인페이지</h1>
+  <div class="login-container">
+    <div class="logo">🔒</div>
+    <h2>Login</h2>
+    <form>
+      <input type="text" placeholder="Enter your ID" class="input-field" required>
+      <input type="password" placeholder="Enter your password" class="input-field" required>
+      <button type="submit" class="btn">Sign In</button>
+    </form>
+  </div>
 </body>
 </html>
