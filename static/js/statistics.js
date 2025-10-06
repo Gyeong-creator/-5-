@@ -29,6 +29,13 @@ console.log('statistics.js loaded');
 			
 			document.getElementById(t.dataset.panel).classList.remove('hidden');
 
+			// balanceCard 표시 여부 제어
+            const balanceCard = document.getElementById("balanceCard");
+            if (t.dataset.panel === "monthlyTotal") {
+                balanceCard.classList.remove("hidden");
+            } else {
+                balanceCard.classList.add("hidden");
+            }
 			
 			});
 		});
