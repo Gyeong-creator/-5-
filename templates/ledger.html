@@ -6,6 +6,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ledger.css') }}">
 </head>
 <body>
+  <a href="{{ url_for('statistics_view') }}" class="stats-link">통계 페이지</a>
+
   <div class="user-info">
     <span>{{ username }}님</span>
     <a href="#">로그아웃</a>
