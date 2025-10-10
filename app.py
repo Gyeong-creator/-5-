@@ -77,8 +77,7 @@ def delete_transaction():
 @app.route('/test')
 def test():
     result = user.select_user_info('kmkr2005', 'kmkr1229')
-    return str(result)
-    
+    return str(result)   
 
 # --- 서버 실행 ---
 if __name__ == "__main__":
