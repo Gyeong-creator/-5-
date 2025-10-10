@@ -1,5 +1,6 @@
 import os
 import json
+import py.user as user
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
@@ -72,6 +73,12 @@ def delete_transaction():
     write_transactions(updated_transactions)
     # 최신 전체 내역을 다시 반환
     return jsonify({'transactions': updated_transactions})
+
+@app.route('/test')
+def test():
+    result = user.select_user_info('kmkr2005', 'kmkr1229')
+    return str(result)
+    
 
 # --- 서버 실행 ---
 if __name__ == "__main__":
