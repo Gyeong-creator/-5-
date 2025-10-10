@@ -1,20 +1,78 @@
-from flask import Flask, render_template
+import os
+import json
+from flask import Flask, render_template, request, jsonify
+
 app = Flask(__name__)
 
+# --- 데이터 파일 관리 함수 ---
+DATA_FILE = 'transactions.json'
 
-@app.route('/login')
-def login_view():
-    return render_template('login.html')
+def read_transactions():
+    """JSON 파일에서 거래 내역을 읽어옵니다."""
+    if not os.path.exists(DATA_FILE):
+        return []
+    try:
+        with open(DATA_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return []
+
+def write_transactions(data):
+    """거래 내역을 JSON 파일에 저장합니다."""
+    with open(DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+# --- 사용자 정보 (로그인 시뮬레이션) ---
+LOGGED_IN_USER = "사용자"
+
+# --- 라우팅 (경로 설정) ---
+@app.route('/')
+def index():
+    return render_template('ledger.html', username=LOGGED_IN_USER)
 
 @app.route('/ledger')
 def ledger_view():
-    return render_template('ledger.html')
+    return render_template('ledger.html', username=LOGGED_IN_USER)
+
+@app.route('/login')
+def login_view():
+    return render_template('login.html', username=LOGGED_IN_USER)
 
 @app.route('/statistics')
 def statistics_view():
-    return render_template('statistics.html')
+    return render_template('statistics.html', username=LOGGED_IN_USER)
 
-    
+@app.route('/transactions')
+def get_transactions():
+    """모든 거래 내역을 JSON으로 반환합니다."""
+    transactions = read_transactions()
+    return jsonify({'transactions': transactions})
 
+@app.route('/add', methods=['POST'])
+def add_transaction():
+    """새로운 거래 내역을 추가하고 전체 내역을 반환합니다."""
+    if request.is_json:
+        new_transaction = request.get_json()
+        transactions = read_transactions()
+        transactions.append(new_transaction)
+        transactions.sort(key=lambda x: x['date'])
+        write_transactions(transactions)
+        return jsonify({'transactions': transactions})
+    return jsonify({"error": "Request must be JSON"}), 400
+
+@app.route('/delete', methods=['POST'])
+def delete_transaction():
+    """요청받은 거래 내역과 일치하는 항목을 찾아 삭제합니다."""
+    transaction_to_delete = request.get_json()
+    transactions = read_transactions()
+
+    # 삭제할 내역과 일치하지 않는 내역만 남겨 새로운 리스트를 생성
+    updated_transactions = [t for t in transactions if t != transaction_to_delete]
+
+    write_transactions(updated_transactions)
+    # 최신 전체 내역을 다시 반환
+    return jsonify({'transactions': updated_transactions})
+
+# --- 서버 실행 ---
 if __name__ == "__main__":
-    app.run(debug=False, port=8080)
+    app.run(debug=True, port=8080)
