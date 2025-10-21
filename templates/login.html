@@ -4,90 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Page</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f5f9ff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .login-container {
-      background: #ffffff;
-      padding: 40px 35px;
-      border-radius: 10px;
-      box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-      text-align: center;
-      width: 350px;
-    }
-
-    .logo {
-      font-size: 45px;
-      color: #007bff;
-      margin-bottom: 20px;
-    }
-
-    .login-container h2 {
-      margin-bottom: 20px;
-      font-size: 22px;
-      color: #333;
-    }
-
-    /* --- 1. 아이콘을 담기 위한 부모 컨테이너 스타일 추가 --- */
-    .input-container {
-        position: relative;
-        width: 100%;
-        margin-bottom: 15px;
-    }
-
-    .input-field {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-
-    /* ID 필드에 오른쪽 패딩을 줘서 아이콘과 겹치지 않게 함 */
-    .input-field[type="password"] {
-        padding-right: 50px; /* 텍스트를 위해 공간을 조금 더 확보 */
-    }
-
-    /* --- 2. 비밀번호 토글 텍스트 스타일 수정 --- */
-    .toggle-password {
-        position: absolute;
-        top: 50%;
-        right: 15px;
-        transform: translateY(-50%);
-        cursor: pointer;
-        color: #007bff; /* 테마 색상과 일치시켜 더 깔끔하게 */
-        user-select: none; /* 아이콘 텍스트가 선택되지 않도록 함 */
-        font-size: 13px; /* 텍스트에 맞게 폰트 크기 조정 */
-        font-weight: 600; /* 텍스트를 약간 굵게 */
-    }
-
-
-    .btn {
-      width: 100%;
-      padding: 12px;
-      background: #007bff;
-      border: none;
-      border-radius: 6px;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      box-sizing: border-box;
-    }
-
-    .btn:hover {
-      background: #0056b3;
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
   <div class="login-container">
@@ -108,19 +25,7 @@
   </div>
 
   <!-- --- 3. 아이콘 클릭 이벤트를 위한 JavaScript 추가 --- -->
-  <script>
-    const togglePassword = document.getElementById('toggle-password');
-    const passwordField = document.getElementById('password-field');
-
-    togglePassword.addEventListener('click', function () {
-        // 비밀번호 필드의 타입을 'password'에서 'text'로, 또는 그 반대로 변경
-        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordField.setAttribute('type', type);
-
-        // 텍스트 내용 변경
-        this.textContent = type === 'password' ? '보기' : '숨김';
-    });
-  </script>
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 
 </body>
 </html>
