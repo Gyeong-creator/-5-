@@ -1,6 +1,6 @@
 import os
 import json
-import py.user as user
+import modules.user as user
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
