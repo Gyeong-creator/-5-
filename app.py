@@ -32,7 +32,7 @@ LOGGED_IN_USER = "사용자"
 # --- 라우팅 (경로 설정) ---
 @app.route('/')
 def index():
-    return render_template('ledger.html', username=LOGGED_IN_USER)
+    return redirect(url_for('login_view'))
 
 @app.route('/ledger')
 def ledger_view():
