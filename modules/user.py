@@ -9,7 +9,8 @@ def db_connector():
             user=config.user,
             password=config.passwd,
             db=config.db,
-            charset='utf8mb4'
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
         )
         return conn
     except Exception as e:
@@ -21,8 +22,8 @@ def select_user_info(id, pw):
     cur = db.cursor(pymysql.cursors.DictCursor)
     try:
         cur.execute("SELECT * FROM user WHERE id=%s AND password=%s", (id, pw))
-        rows = cur.fetchall()
-        return rows or None
+        row = cur.fetchone() 
+        return row or None
     finally:
         cur.close()
         db.close()

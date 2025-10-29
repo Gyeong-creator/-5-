@@ -1,9 +1,21 @@
 import os
 import json
 import modules.user as user
-from flask import Flask, render_template, request, jsonify
+import modules.config as config
+from flask import Flask, render_template, request, jsonify, session
+from datetime import timedelta
+
 
 app = Flask(__name__)
+app.secret_key = config.secret  
+app.permanent_session_lifetime = timedelta(hours=6)  # session validate time
+
+# security option(HTTPS)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    # SESSION_COOKIE_SECURE=True
+)
 
 # --- 데이터 파일 관리 함수 ---
 DATA_FILE = 'transactions.json'
@@ -74,10 +86,20 @@ def delete_transaction():
     # 최신 전체 내역을 다시 반환
     return jsonify({'transactions': updated_transactions})
 
-@app.route('/test')
-def test():
-    result = user.select_user_info('kmkr2005', 'kmkr1229')
-    return str(result)   
+@app.route('/login_check', methods=['POST'])
+def login():
+    data = request.get_json()
+    id = data.get('id')
+    password = data.get('password')
+
+    result = user.select_user_info(id, password)
+    if result == None:
+        return jsonify(success=False)
+    else:
+        session['id'] = result['id']       # DB 결과에 맞게 키 변경
+        session['username'] = result['user_name']    # 예: 이름
+        session.permanent = True
+        return jsonify(success=True)
 
 # --- 서버 실행 ---
 if __name__ == "__main__":
