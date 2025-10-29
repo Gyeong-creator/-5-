@@ -29,7 +29,7 @@ LOGGED_IN_USER = "사용자"
 # --- 라우팅 (경로 설정) ---
 @app.route('/')
 def index():
-    return "여기는 develop 브랜치입니다. (충돌 테스트용)"
+    return render_template('ledger.html', username=LOGGED_IN_USER)
 
 @app.route('/ledger')
 def ledger_view():
