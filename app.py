@@ -2,8 +2,9 @@ import os
 import json
 import modules.user as user
 import modules.config as config
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from datetime import timedelta
+from functools import wraps
 
 
 app = Flask(__name__)
@@ -21,8 +22,25 @@ app.config.update(
 @app.context_processor
 def inject_user():
     return {
-        'username': session.get('username')
+        'username': session.get('username'),
+        'id': session.get('id')
     }
+
+@app.before_request
+def require_login_for_all_except_public():
+    public_endpoints = {'login_view', 'login', 'static'}  # 여긴 로그인 없이 접근 허용
+    ep = (request.endpoint or '').split('.')[0]           # blueprint 대비
+
+    if ep in public_endpoints:
+        return  # 통과
+
+    if not session.get('id'):
+        # JSON 요청이면 JSON으로, 그 외는 로그인 페이지로
+        if request.is_json or request.path.startswith(('/add', '/delete', '/transactions')):
+            return jsonify(success=False, message='Login required'), 401
+        return redirect(url_for('login_view', next=request.path))
+
+
 
 # --- 데이터 파일 관리 함수 ---
 DATA_FILE = 'transactions.json'
@@ -52,6 +70,8 @@ def index():
 
 @app.route('/login')
 def login_view():
+    if session.get('id'):
+        return redirect(url_for('index'))
     return render_template('login.html')
 
 @app.route('/statistics')
@@ -98,11 +118,16 @@ def login():
     result = user.select_user_info(id, password)
     if result == None:
         return jsonify(success=False)
-    else:
-        session['id'] = result['id']       
-        session['username'] = result['user_name']   
-        session.permanent = True
-        return jsonify(success=True)
+    
+    session['id'] = result['id']       
+    session['username'] = result['user_name']   
+    session.permanent = True
+    
+    nxt = request.args.get('next') or data.get('next')
+
+    if not nxt or not nxt.startswith('/'):
+        nxt = url_for('index')
+    return jsonify(success=True, next=nxt)
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
