@@ -4,14 +4,23 @@
   <meta charset="UTF-8" />
   <title>메인 페이지</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ledger.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+
 </head>
 <body>
-  <a href="{{ url_for('statistics_view') }}" class="stats-link">통계 페이지</a>
+
+  {% include "_header.html" %}
+
+  <!--
+
+    <a href="{{ url_for('statistics_view') }}" class="stats-link">통계 페이지</a>
 
   <div class="user-info">
     <span>{{ username }}님</span>
     <a href="#">로그아웃</a>
   </div>
+  -->
+  
 
   <div id="input-container" class="centered-prompt">
     <h3 id="input-title">달력에서 날짜를 클릭하세요</h3>

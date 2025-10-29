@@ -17,6 +17,13 @@ app.config.update(
     # SESSION_COOKIE_SECURE=True
 )
 
+
+@app.context_processor
+def inject_user():
+    return {
+        'username': session.get('username')
+    }
+
 # --- 데이터 파일 관리 함수 ---
 DATA_FILE = 'transactions.json'
 
@@ -41,19 +48,15 @@ LOGGED_IN_USER = "사용자"
 # --- 라우팅 (경로 설정) ---
 @app.route('/')
 def index():
-    return render_template('ledger.html', username=LOGGED_IN_USER)
-
-@app.route('/ledger')
-def ledger_view():
-    return render_template('ledger.html', username=LOGGED_IN_USER)
+    return render_template('ledger.html')
 
 @app.route('/login')
 def login_view():
-    return render_template('login.html', username=LOGGED_IN_USER)
+    return render_template('login.html')
 
 @app.route('/statistics')
 def statistics_view():
-    return render_template('statistics.html', username=LOGGED_IN_USER)
+    return render_template('statistics.html')
 
 @app.route('/transactions')
 def get_transactions():
