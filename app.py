@@ -28,11 +28,11 @@ def inject_user():
 
 @app.before_request
 def require_login_for_all_except_public():
-    public_endpoints = {'login_view', 'login', 'static'}  # 여긴 로그인 없이 접근 허용
+    public_endpoints = {'login_view', 'login', 'static'}  # 로그인 없이 접근 허용
     ep = (request.endpoint or '').split('.')[0]           # blueprint 대비
 
     if ep in public_endpoints:
-        return  # 통과
+        return 
 
     if not session.get('id'):
         # JSON 요청이면 JSON으로, 그 외는 로그인 페이지로
