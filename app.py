@@ -1,9 +1,12 @@
 import os
 import json
-import modules.user as user
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from modules.user import select_user_info, select_ledger_by_user
 
 app = Flask(__name__)
+
+# 세션 사용을 위한 비밀 키
+app.secret_key = 'your_secret_key_here' # 로그인 기능을 위해 팀원과 동일한 키로 맞추기
 
 # --- 데이터 파일 관리 함수 ---
 DATA_FILE = 'transactions.json'
@@ -45,9 +48,26 @@ def statistics_view():
 
 @app.route('/transactions')
 def get_transactions():
-    """모든 거래 내역을 JSON으로 반환합니다."""
-    transactions = read_transactions()
-    return jsonify({'transactions': transactions})
+    """
+    (조회) DB에서 모든 거래 내역을 JSON으로 반환합니다.
+    (기존 JSON 파일 읽기에서 DB 읽기로 변경)
+    """
+    # 1. (필수) 세션에서 현재 로그인한 사용자 ID 가져오기
+    user_id = session.get('user_id')
+    if not user_id:
+        # 로그인이 안 되어 있으면 빈 데이터를 반환 (JS 오류 방지)
+        return jsonify({'transactions': []}) 
+
+    # 2. DB에서 데이터 조회
+    transactions_list = select_ledger_by_user(user_id)
+    
+    # 3. 날짜 객체를 JS가 읽을 수 있는 문자열로 변환
+    for item in transactions_list:
+        if 'date' in item and hasattr(item['date'], 'isoformat'):
+            item['date'] = item['date'].isoformat()
+            
+    # 4. JS가 기대하는 {'transactions': [...]} 형태로 반환
+    return jsonify({'transactions': transactions_list})
 
 @app.route('/add', methods=['POST'])
 def add_transaction():
@@ -76,7 +96,7 @@ def delete_transaction():
 
 @app.route('/test')
 def test():
-    result = user.select_user_info('kmkr2005', 'kmkr1229')
+    result = select_user_info('yubin', 'yubb')
     return str(result)   
 
 # --- 서버 실행 ---
