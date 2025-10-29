@@ -2,7 +2,7 @@ import os
 import json
 import modules.user as user
 import modules.config as config
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import timedelta
 
 
@@ -17,7 +17,7 @@ app.config.update(
     # SESSION_COOKIE_SECURE=True
 )
 
-
+# Expose session values (e.g., username, role) globally to all templates
 @app.context_processor
 def inject_user():
     return {
@@ -99,11 +99,16 @@ def login():
     if result == None:
         return jsonify(success=False)
     else:
-        session['id'] = result['id']       # DB 결과에 맞게 키 변경
-        session['username'] = result['user_name']    # 예: 이름
+        session['id'] = result['id']       
+        session['username'] = result['user_name']   
         session.permanent = True
         return jsonify(success=True)
 
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    session.clear() 
+    return redirect(url_for('login_view'))
+    
 # --- 서버 실행 ---
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
