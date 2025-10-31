@@ -6,19 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>가계부 통계</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/statistics.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
     <script src="{{ url_for('static', filename='js/statistics.js') }}"></script>
 
 </head>
 <body>
-    <!-- 헤더: 좌측 내역 링크, 우측 사용자/로그아웃 -->
-    <header class="topbar">
-        <a class="brand-link" href="/ledger">입출금 내역</a>
-        <div class="right">
-            <span id="userName" class="user">강지연님</span>
-            <a class="logout" href="/login">로그아웃</a>
-        </div>
-    </header>
-
+   
+    {% include "_header.html" %}
+    
     <!-- 탭 네비게이션 -->
     <nav class="tabs" role="tablist">
         <button class="tab active" data-panel="monthlyTotal">월간 합계</button>

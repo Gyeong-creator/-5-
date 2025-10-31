@@ -1,37 +1,67 @@
 import os
 import json
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+import modules.user as user_db
+import modules.config as config
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from datetime import timedelta
+from functools import wraps
 
-# user.py는 user_db라는 별명으로
-import modules.user as user_db 
-# ledger.py는 ledger_db라는 별명으로
-import modules.ledger as ledger_db 
-# --- ▲▲▲ 수정 완료 ▲▲▲ ---
 
 app = Flask(__name__)
+app.secret_key = config.secret  
+app.permanent_session_lifetime = timedelta(hours=6)  # session validate time
 
-# 세션 사용을 위한 비밀 키
-app.secret_key = 'your_secret_key_here'
+# security option(HTTPS)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    # SESSION_COOKIE_SECURE=True
+)
+
+# Expose session values (e.g., username, role) globally to all templates
+@app.context_processor
+def inject_user():
+    return {
+        'username': session.get('username'),
+        'id': session.get('id')
+    }
+
+@app.before_request
+def require_login_for_all_except_public():
+    public_endpoints = {'login_view', 'login', 'static'}  # 로그인 없이 접근 허용
+    ep = (request.endpoint or '').split('.')[0]           # blueprint 대비
+
+    if ep in public_endpoints:
+        return 
+
+    if not session.get('id'):
+        # JSON 요청이면 JSON으로, 그 외는 로그인 페이지로
+        if request.is_json or request.path.startswith(('/add', '/delete', '/transactions')):
+            return jsonify(success=False, message='Login required'), 401
+        return redirect(url_for('login_view', next=request.path))
+
+
+
+# --- 데이터 파일 관리 함수 ---
+DATA_FILE = 'transactions.json'
+
+
 
 # --- 라우팅 (경로 설정) ---
 @app.route('/')
 def index():
-    return redirect(url_for('login_view'))
-
-@app.route('/ledger')
-def ledger_view():
-    username = session.get('username', '사용자') 
-    return render_template('ledger.html', username=username)
+    return render_template('ledger.html')
 
 @app.route('/login')
 def login_view():
-    username = session.get('username', '사용자') 
-    return render_template('login.html', username=username)
+    if session.get('id'):
+        return redirect(url_for('index'))
+    return render_template('login.html')
 
 @app.route('/statistics')
 def statistics_view():
-    username = session.get('username', '사용자') 
-    return render_template('statistics.html', username=username)
+    return render_template('statistics.html')
+
 
 @app.route('/transactions')
 def get_transactions():
@@ -109,11 +139,32 @@ def delete_transaction():
 
     return jsonify({"error": "Request must be JSON"}), 400
 
-@app.route('/test')
-def test():
-    result = user_db.select_user_info('yubin', 'yubb')
-    return jsonify(result)   
 
+@app.route('/login_check', methods=['POST'])
+def login():
+    data = request.get_json()
+    id = data.get('id')
+    password = data.get('password')
+
+    result = user_db.select_user_info(id, password)
+    if result == None:
+        return jsonify(success=False)
+    
+    session['id'] = result['id']       
+    session['username'] = result['user_name']   
+    session.permanent = True
+    
+    nxt = request.args.get('next') or data.get('next')
+
+    if not nxt or not nxt.startswith('/'):
+        nxt = url_for('index')
+    return jsonify(success=True, next=nxt)
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    session.clear() 
+    return redirect(url_for('login_view'))
+    
 # --- 서버 실행 ---
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

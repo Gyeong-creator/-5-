@@ -1,4 +1,3 @@
-// statistics.js (정리본)
 console.log('statistics.js loaded');
 
 (function () {
@@ -29,7 +28,7 @@ console.log('statistics.js loaded');
 			
 			document.getElementById(t.dataset.panel).classList.remove('hidden');
 
-			// balanceCard 표시 여부 제어
+			// balanceCard, don't remove
             const balanceCard = document.getElementById("balanceCard");
             if (t.dataset.panel === "monthlyTotal") {
                 balanceCard.classList.remove("hidden");
@@ -125,11 +124,9 @@ console.log('statistics.js loaded');
 
   	function renderAll(){ setRanges(); renderBalance(); renderCharts(); }
 
-	// ---------- Init (ready 한 번만) ----------
+	// ---------- Init ----------
 	function init(){
 		bindTabs();
-		const name = localStorage.getItem('username') || '강지연님';
-		document.getElementById('userName').textContent = name;
 		renderAll();
 		window.addEventListener('resize', renderCharts);
 	}
