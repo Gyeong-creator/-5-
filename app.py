@@ -1,12 +1,11 @@
-import os
-import json
 import modules.user as user_db
+import modules.ledger as ledger_db
 import modules.config as config
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from datetime import timedelta
 from functools import wraps
 
-
+# ====================== flask & session & setting values ======================
 app = Flask(__name__)
 app.secret_key = config.secret  
 app.permanent_session_lifetime = timedelta(hours=6)  # session validate time
@@ -14,10 +13,16 @@ app.permanent_session_lifetime = timedelta(hours=6)  # session validate time
 # security option(HTTPS)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SAMESITE="Lax"
     # SESSION_COOKIE_SECURE=True
 )
 
+DATA_FILE = 'transactions.json'
+
+
+
+
+# ====================== preprocess ======================
 # Expose session values (e.g., username, role) globally to all templates
 @app.context_processor
 def inject_user():
@@ -25,6 +30,7 @@ def inject_user():
         'username': session.get('username'),
         'id': session.get('id')
     }
+
 
 @app.before_request
 def require_login_for_all_except_public():
@@ -42,43 +48,46 @@ def require_login_for_all_except_public():
 
 
 
-# --- 데이터 파일 관리 함수 ---
-DATA_FILE = 'transactions.json'
 
-
-
-# --- 라우팅 (경로 설정) ---
+# ====================== 라우팅 (경로 설정) ======================
 @app.route('/')
 def index():
-    return render_template('ledger.html')
+    if session.get('id'):
+        return redirect(url_for('ledger_view'))
+    return render_template('login.html')
+
 
 @app.route('/login')
 def login_view():
     if session.get('id'):
-        return redirect(url_for('index'))
+        return redirect(url_for('ledger_view'))
     return render_template('login.html')
+
+
+@app.route('/ledger')
+def ledger_view():
+    return render_template('ledger.html')
+
 
 @app.route('/statistics')
 def statistics_view():
     return render_template('statistics.html')
 
 
+
+# ====================== ledger ======================
 @app.route('/transactions')
 def get_transactions():
-    """ (조회) DB에서 모든 거래 내역을 JSON으로 반환합니다. """
-    user_id = session.get('user_id')
-    if not user_id:
-        session['user_id'] = 1 # 테스트용 임시 로그인
-        user_id = 1
-        # (나중에 로그인 기능이 완성되면 이 2줄을 지우세요)
-
+    user_id = session.get('id')
     transactions_list = ledger_db.select_ledger_by_user(user_id)
     
+    print(transactions_list)
     for item in transactions_list:
         if 'date' in item and hasattr(item['date'], 'isoformat'):
             item['date'] = item['date'].isoformat()
             
     return jsonify({'transactions': transactions_list})
+
 
 @app.route('/add', methods=['POST'])
 def add_transaction():
@@ -112,6 +121,7 @@ def add_transaction():
             
     return jsonify({"error": "Request must be JSON"}), 400
 
+
 @app.route('/delete', methods=['POST'])
 def delete_transaction():
     """ (수정) 요청받은 ID의 거래 내역을 DB에서 삭제합니다. """
@@ -140,6 +150,8 @@ def delete_transaction():
     return jsonify({"error": "Request must be JSON"}), 400
 
 
+
+# ====================== auth ======================
 @app.route('/login_check', methods=['POST'])
 def login():
     data = request.get_json()
@@ -160,11 +172,14 @@ def login():
         nxt = url_for('index')
     return jsonify(success=True, next=nxt)
 
+
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.clear() 
     return redirect(url_for('login_view'))
     
-# --- 서버 실행 ---
+
+
+# ====================== server ======================
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
