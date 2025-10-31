@@ -1,9 +1,9 @@
 <header class="topbar">
-    {% if request.path == url_for('index') %}
+    {% if request.path == url_for('ledger_view') %}
     <a href="{{ url_for('statistics_view') }}"
         class="brand-link">통계 페이지</a>
     {% elif request.path == url_for('statistics_view') %}
-    <a href="{{ url_for('index') }}"
+    <a href="{{ url_for('ledger_view') }}"
         class="brand-link">입출금 내역</a>
     {% endif %}
     
