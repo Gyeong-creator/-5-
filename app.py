@@ -215,6 +215,21 @@ def stats_monthly_spend():
     return jsonify(data)
 
 
+@app.route('/api/stats/monthly-cats')
+def stats_monthly_cats():
+    user_id = session.get('id')
+
+    today = date.today()
+    year  = int(request.args.get('year',  today.year))
+    month = int(request.args.get('month', today.month))
+
+    days  = monthrange(year, month)[1]
+    start = date(year, month, 1)
+    end   = date(year + (month == 12), 1 if month == 12 else month + 1, 1)
+
+    data = ledger_db.select_month_category_spend(user_id, start, end)
+    return jsonify(data)
+
 # ====================== server ======================
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

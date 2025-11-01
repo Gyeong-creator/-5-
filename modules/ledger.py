@@ -136,9 +136,54 @@ def select_month_daily_spend_income(user_id, start, end, year, month, days):
             'totalIncome': run_inc,
             'totalSpend':  run_spd,
             'totalCard': run_card,
-            'totalTrasfer': run_tr,
+            'totalTransfer': run_tr,
             'totalOther':  run_oth,
         }
+    finally:
+        if cur: cur.close()
+        if db: db.close()
+
+
+# 이번 달 지출 카테고리 합계/비중
+def select_month_category_spend(user_id, start, end):
+    db = None
+    cur = None
+    try:
+        db = db_connector()
+        cur = db.cursor(pymysql.cursors.DictCursor)
+
+        sql = """
+            SELECT
+              COALESCE(NULLIF(TRIM(category), ''), '기타') AS cat,
+              SUM(
+                CASE
+                  WHEN TRIM(LOWER(type)) <> '입금'
+                  THEN CAST(REPLACE(amount, ',', '') AS SIGNED)
+                  ELSE 0
+                END
+              ) AS spend
+            FROM ledger
+            WHERE user_id = %s
+              AND date >= %s AND date < %s
+            GROUP BY cat
+            HAVING spend > 0
+            ORDER BY spend DESC
+        """
+        cur.execute(sql, (user_id, start, end))
+        rows = cur.fetchall()  # [{'cat': '식비', 'spend': 12345}, ...]
+
+        total = sum(int(r['spend'] or 0) for r in rows) or 0
+        items = []
+        for r in rows:
+            amt = int(r['spend'] or 0)
+            pct = (amt / total * 100.0) if total > 0 else 0.0
+            items.append({
+                'category': r['cat'],
+                'amount': amt,
+                'pct': round(pct, 1)  # 1자리 소수
+            })
+
+        return { 'total': total, 'items': items }
     finally:
         if cur: cur.close()
         if db: db.close()

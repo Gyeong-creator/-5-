@@ -28,14 +28,13 @@ console.log('statistics.js loaded');
 	}
 
 	// ---------- 기본 상태(주간/카테고리용 더미) ----------
-	const defaultState = {
-		weeksLabels: Array.from({ length: 10 }, (_, i) => `${i + 1}주`),
-		weeksTotals: [110000, 90000, 120000, 150000, 130000, 170000, 140000, 160000, 155000, 180000],
-		monthCats: { "식비": 34, "주거/통신": 12, "생활용품": 8, "의복/미용": 7, "건강/문화": 8, "교육/육아": 4, "교통/차량": 14, "경조사/회비": 3, "세금/이자": 4, "용돈/기타": 6 },
-		incomeTotal: 568752,
-		expense: { total: 958673, card: 656461, transfer: 302212, other: 0 },
+	let state = {
+		weeksLabels: [],
+		weeksTotals: [],
+		monthCats: {},
+		incomeTotal: 0,
+		expense: { total: 0, card: 0, transfer: 0, other: 0 },
 	};
-	let state = (typeof window.__STATS__ !== 'undefined' && window.__STATS__) || defaultState;
 
 	// ---------- Tabs ----------
 	function bindTabs() {
@@ -56,22 +55,26 @@ console.log('statistics.js loaded');
 	}
 
 	// ---------- 공통 Chart.js 렌더 ----------
-	function renderChart(canvas, datasets, labels) {
+	function renderChart(canvas, datasets, labels, extraOptions = {}) {
 		const ctx = canvas.getContext('2d');
 		if (canvas._chartInstance) canvas._chartInstance.destroy();
-		const chart = new Chart(ctx, {
-		type: 'line',
-		data: { labels, datasets },
-		options: {
+	  
+		const defaultOptions = {
 			responsive: true,
 			maintainAspectRatio: false,
 			plugins: { legend: { display: true, position: 'top' } },
 			scales: { y: { beginAtZero: true } }
-		}
+		};
+	  
+		const chart = new Chart(ctx, {
+			type: 'line',
+			data: { labels, datasets },
+			options: Object.assign({}, defaultOptions, extraOptions)
 		});
+	  
 		canvas._chartInstance = chart;
 	}
-
+	  
 	// ---------- 데이터 요청 ----------
 	async function fetchMonthlySpend(year, month) {
 		const res = await fetch(`/api/stats/monthly-spend?year=${year}&month=${month}`);
@@ -88,8 +91,7 @@ console.log('statistics.js loaded');
 		// 기존 기간 라벨 함수 그대로 사용
 		setRangeFor('rangeMonthly', yyyy, mm);
 	
-		// ⚠️ 이 함수가 {labels, cumSpend, cumIncome}를 반환해야 해요.
-		//   (백엔드의 /api/stats/monthly-total 응답에 맞춰주세요)
+		// {labels, cumSpend, cumIncome}를 반환 - /api/stats/monthly-total 응답
 		const { labels = [], cumSpend = [], cumIncome = [] } =
 		await fetchMonthlySpend(yyyy, mm);
 	
@@ -109,8 +111,7 @@ console.log('statistics.js loaded');
 		deltaEl.textContent = (delta >= 0 ? '+' : '') + won(delta) + ' (오늘 증감)';
 		deltaEl.style.color = delta >= 0 ? 'var(--good)' : '#ef4444';
 	
-		// 차트: 기존 renderChart 유틸 유지
-		// (renderChart(canvasEl, datasets[], labels) 형태였죠)
+		// renderChart(canvasEl, datasets[], labels) 
 		const canvas = document.getElementById('chartMonthlyTotal');
 		renderChart(
 		canvas,
@@ -197,8 +198,8 @@ console.log('statistics.js loaded');
 		{
 			label: '이번달 누적 지출',
 			data: cumSpendCur,
-			borderColor: '#ef4444',               // 빨강
-			backgroundColor: 'rgba(239,68,68,0.12)',
+			borderColor: '#3b82f6',               
+			backgroundColor: 'rgba(59,130,246,0.15)',
 			borderWidth: 3,
 			tension: 0.3,
 			fill: true,
@@ -220,63 +221,95 @@ console.log('statistics.js loaded');
 
 
 	// ---------- 주간 합계----------
-	function lineChart(el, series, labels) {
-		const w = el.clientWidth || 600, h = el.clientHeight || 220;
-		const pad = { l: 28, r: 12, t: 12, b: 24 };
-		const W = Math.max(320, w), H = Math.max(160, h);
-		const NS = 'http://www.w3.org/2000/svg';
-		el.innerHTML = '';
-		const svg = document.createElementNS(NS, 'svg');
-		svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-		el.appendChild(svg);
+	async function updateWeeklySection() {
+		// 기존 더미(state.weeksLabels, weeksTotals) 그대로 사용
+		const labels = state.weeksLabels || [];
+		const data   = state.weeksTotals || [];
+	  
+		// KPI 텍스트 유지
+		const won = n => (Math.round(n)).toLocaleString('ko-KR') + '원';
+		const sum = a => a.reduce((x, y) => x + y, 0);
+		document.getElementById('wtSum').textContent = won(sum(data));
+	  
+		// Chart.js 렌더
+		const canvas = document.getElementById('chartWeekly');
+		renderChart(
+		  canvas,
+		  [{
+			label: '주간 합계',
+			data,
+			borderColor: '#0ea5e9',
+			backgroundColor: 'rgba(14,165,233,0.12)',
+			borderWidth: 3,
+			tension: 0.3,
+			fill: true,
+			pointRadius: 0
+		  }],
+		  labels,
+		  {
+			plugins: {
+			  tooltip: {
+				callbacks: {
+				  label: (ctx) =>
+					(Math.round(ctx.parsed.y)).toLocaleString('ko-KR') + '원'
+				}
+			  }
+			},
+			scales: {
+			  y: {
+				beginAtZero: true,
+				ticks: {
+				  callback: (v) => v.toLocaleString('ko-KR')
+				}
+			  }
+			}
+		  }
+		);
+	  }
+	  
 
-		const ymax = Math.max(1, ...series.flat());
-		const X = i => pad.l + (W - pad.l - pad.r) * (i / (labels.length - 1 || 1));
-		const Y = v => pad.t + (H - pad.t - pad.b) * (1 - (v / ymax));
 
-		const grid = document.createElementNS(NS, 'g');
-		grid.setAttribute('class', 'grid');
-		svg.appendChild(grid);
-		for (let i = 0; i <= 5; i++) {
-		const y = pad.t + (H - pad.t - pad.b) * i / 5;
-		const ln = document.createElementNS(NS, 'line');
-		ln.setAttribute('x1', pad.l);
-		ln.setAttribute('x2', W - pad.r);
-		ln.setAttribute('y1', y);
-		ln.setAttribute('y2', y);
-		grid.appendChild(ln);
-		}
+	async function fetchMonthlyCats(year, month) {
+		const res = await fetch(`/api/stats/monthly-cats?year=${year}&month=${month}`);
+		if (!res.ok) throw new Error('monthly-cats api failed');
+		return res.json(); // { total, items:[{category, amount, pct}] }
+	  }
 
-		const colors = ['var(--accent)'];
-		series.forEach((arr, si) => {
-		const p = document.createElementNS(NS, 'path');
-		let d = '';
-		arr.forEach((v, i) => { d += (i ? ' L ' : 'M ') + X(i) + ' ' + Y(v); });
-		p.setAttribute('d', d);
-		p.setAttribute('fill', 'none');
-		p.setAttribute('stroke', colors[si % colors.length]);
-		p.setAttribute('stroke-width', '3');
-		p.setAttribute('stroke-linecap', 'round');
-		svg.appendChild(p);
-		});
-	}
-
-	// ---------- 주간/카테고리/잔액  ----------
-	function renderChartsExceptMonthly() {
-		// 카테고리 pills
-		const list = document.getElementById('categoryBreak');
-		list.innerHTML = '';
-		Object.entries(state.monthCats).forEach(([k, v]) => {
+	async function updateCategoryPills() {
+	const now = new Date();
+	const y = now.getFullYear();
+	const m = now.getMonth() + 1;
+	
+	const wrap = document.getElementById('categoryBreak');
+	if (!wrap) return;
+	wrap.innerHTML = '';
+	
+	try {
+		const { items = [] } = await fetchMonthlyCats(y, m);
+	
+		if (!items.length) {
 		const span = document.createElement('span');
 		span.className = 'pill';
-		span.textContent = `${k} ${v}%`;
-		list.appendChild(span);
+		span.textContent = '지출 데이터 없음';
+		wrap.appendChild(span);
+		return;
+		}
+	
+		items.forEach(({ category, pct }) => {
+		const pill = document.createElement('span');
+		pill.className = 'pill';
+		pill.textContent = `${category} ${Math.round(pct)}%`;
+		wrap.appendChild(pill);
 		});
-
-		// 주간 합계
-		document.getElementById('wtSum').textContent = won(sum(state.weeksTotals));
-		lineChart(document.getElementById('chartWeekly'), [state.weeksTotals], state.weeksLabels);
+	} catch (e) {
+		console.error(e);
+		const span = document.createElement('span');
+		span.className = 'pill';
+		span.textContent = '로드 실패';
+		wrap.appendChild(span);
 	}
+	}
+	  
 
 	function renderBalance() {
 		const inc = state.incomeTotal || 0;
@@ -301,8 +334,9 @@ console.log('statistics.js loaded');
 		renderBalance();
 		await updateMonthlyTotalSection();  // Chart.js (합계 = 지출+수입)
 		await updateMonthlySpendSection();  // Chart.js (이번달 vs 지난달 지출)
+		await updateWeeklySection(); 
 		updateBalanceCard();
-		renderChartsExceptMonthly();        // 주간/카테고리 유지
+		updateCategoryPills();
 	}
 
 	if (document.readyState === 'loading')
