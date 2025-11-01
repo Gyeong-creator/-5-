@@ -187,3 +187,113 @@ def select_month_category_spend(user_id, start, end):
     finally:
         if cur: cur.close()
         if db: db.close()
+
+
+def select_recent_weeks(user_id, n_weeks: int):
+
+    db = cur = None
+    try:
+        db = db_connector()
+        cur = db.cursor(pymysql.cursors.DictCursor)
+
+        sql = """
+        WITH RECURSIVE seq(i) AS (
+            SELECT 0
+            UNION ALL
+            SELECT i + 1 FROM seq WHERE i + 1 < %s   -- 0..(n_weeks-1)
+        ),
+        base AS (
+            -- 이번 주 월요일(한국 기준: WEEKDAY()=0이 월)
+            SELECT DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) AS monday_this_week
+        ),
+        weeks AS (
+            -- i=0: 이번 주, i=1: 지난 주 ...
+            SELECT DATE_SUB(b.monday_this_week, INTERVAL s.i WEEK) AS week_start
+            FROM base b
+            JOIN seq  s
+        ),
+        agg AS (
+            SELECT
+                w.week_start,
+                COALESCE(SUM(CASE
+                    WHEN LOWER(TRIM(l.type)) IN ('입금','수입')
+                    THEN CAST(REPLACE(l.amount, ',', '') AS SIGNED)
+                    ELSE 0 END), 0) AS income,
+                COALESCE(SUM(CASE
+                    WHEN LOWER(TRIM(l.type)) IN ('출금','지출')
+                    THEN CAST(REPLACE(l.amount, ',', '') AS SIGNED)
+                    ELSE 0 END), 0) AS spend
+            FROM weeks w
+            LEFT JOIN ledger l
+              ON l.user_id = %s
+             AND l.date >= w.week_start
+             AND l.date <  DATE_ADD(w.week_start, INTERVAL 7 DAY)
+            GROUP BY w.week_start
+        )
+        SELECT
+            DATE_FORMAT(week_start, '%%m.%%d') AS start_label,
+            DATE_FORMAT(DATE_ADD(week_start, INTERVAL 6 DAY), '%%m.%%d') AS end_label,
+            (income - spend) AS net
+        FROM agg
+        ORDER BY week_start
+        """
+
+        cur.execute(sql, (n_weeks, user_id))
+        rows = cur.fetchall()
+
+        labels = [f"{r['start_label']}~{r['end_label']}" for r in rows]
+        net    = [int(r['net'] or 0) for r in rows]
+        return {"labels": labels, "net": net}
+
+    finally:
+        if cur: cur.close()
+        if db: db.close()
+
+
+def select_weekly_spend(user_id: int, end_date: date, n_weeks: int = 10):
+    db = None
+    cur = None
+    try:
+        db = db_connector()
+        cur = db.cursor(pymysql.cursors.DictCursor)
+
+        # 기준 주차 코드
+        cur.execute("SELECT YEARWEEK(%s, 6) AS yw_end", (end_date,))
+        yw_end = int(cur.fetchone()['yw_end'])
+
+        sql = """
+            SELECT
+              YEARWEEK(date, 6) AS yw,
+              MIN(DATE_SUB(date, INTERVAL WEEKDAY(date) DAY)) AS week_start,
+              SUM(
+                CASE WHEN type = '출금'
+                     THEN CAST(REPLACE(amount, ',', '') AS SIGNED)
+                     ELSE 0
+                END
+              ) AS spend
+            FROM ledger
+            WHERE user_id = %s
+              AND YEARWEEK(date, 6) BETWEEN %s - %s + 1 AND %s
+            GROUP BY yw
+            ORDER BY yw
+        """
+        cur.execute(sql, (user_id, yw_end, n_weeks, yw_end))
+        rows = cur.fetchall()
+
+        spend_by_yw = { int(r['yw']): int(r['spend'] or 0) for r in rows }
+        start_by_yw = { int(r['yw']): r['week_start'] for r in rows }
+
+        labels, totals = [], []
+        first_yw = yw_end - (n_weeks - 1)
+        for k in range(first_yw, yw_end + 1):
+            totals.append(spend_by_yw.get(k, 0))
+            wk = start_by_yw.get(k)
+            labels.append(
+                f"{wk.month}/{str(wk.day).zfill(2)}주" if wk else f"{str(k)[-2:]}주차"
+            )
+
+        return {'labels': labels, 'totals': totals}
+
+    finally:
+        if cur: cur.close()
+        if db: db.close()

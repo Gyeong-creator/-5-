@@ -230,6 +230,15 @@ def stats_monthly_cats():
     data = ledger_db.select_month_category_spend(user_id, start, end)
     return jsonify(data)
 
+
+@app.route('/api/stats/weekly')
+def stats_weekly():
+    user_id = session.get('id')
+    n = int(request.args.get('n', 10))
+    data = ledger_db.select_recent_weeks(user_id, n)
+    return jsonify(data)
+
+
 # ====================== server ======================
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

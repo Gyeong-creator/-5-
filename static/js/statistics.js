@@ -27,7 +27,7 @@ console.log('statistics.js loaded');
 		return out;
 	}
 
-	// ---------- 기본 상태(주간/카테고리용 더미) ----------
+	// ---------- 기본 상태----------
 	let state = {
 		weeksLabels: [],
 		weeksTotals: [],
@@ -192,8 +192,7 @@ console.log('statistics.js loaded');
 		document.getElementById('msDelta').textContent =
 		diff >= 0 ? `지난달보다 ${won(diff)} 더 쓰는 중` : `지난달보다 ${won(-diff)} 덜 쓰는 중`;
 
-		// Chart.js 두 줄(이번달/지난달 지출 누적)
-		const canvas = document.getElementById('chartMonthlySpend'); // <canvas>
+		const canvas = document.getElementById('chartMonthlySpend'); 
 		renderChart(canvas, [
 		{
 			label: '이번달 누적 지출',
@@ -218,97 +217,84 @@ console.log('statistics.js loaded');
 		], labels);
 	}
 
-
-
-	// ---------- 주간 합계----------
-	async function updateWeeklySection() {
-		// 기존 더미(state.weeksLabels, weeksTotals) 그대로 사용
-		const labels = state.weeksLabels || [];
-		const data   = state.weeksTotals || [];
 	  
-		// KPI 텍스트 유지
-		const won = n => (Math.round(n)).toLocaleString('ko-KR') + '원';
-		const sum = a => a.reduce((x, y) => x + y, 0);
-		document.getElementById('wtSum').textContent = won(sum(data));
-	  
-		// Chart.js 렌더
-		const canvas = document.getElementById('chartWeekly');
-		renderChart(
-		  canvas,
-		  [{
-			label: '주간 합계',
-			data,
-			borderColor: '#0ea5e9',
-			backgroundColor: 'rgba(14,165,233,0.12)',
-			borderWidth: 3,
-			tension: 0.3,
-			fill: true,
-			pointRadius: 0
-		  }],
-		  labels,
-		  {
-			plugins: {
-			  tooltip: {
-				callbacks: {
-				  label: (ctx) =>
-					(Math.round(ctx.parsed.y)).toLocaleString('ko-KR') + '원'
-				}
-			  }
-			},
-			scales: {
-			  y: {
-				beginAtZero: true,
-				ticks: {
-				  callback: (v) => v.toLocaleString('ko-KR')
-				}
-			  }
-			}
-		  }
-		);
-	  }
-	  
-
 
 	async function fetchMonthlyCats(year, month) {
 		const res = await fetch(`/api/stats/monthly-cats?year=${year}&month=${month}`);
 		if (!res.ok) throw new Error('monthly-cats api failed');
 		return res.json(); // { total, items:[{category, amount, pct}] }
-	  }
+	}
 
 	async function updateCategoryPills() {
-	const now = new Date();
-	const y = now.getFullYear();
-	const m = now.getMonth() + 1;
+		const now = new Date();
+		const y = now.getFullYear();
+		const m = now.getMonth() + 1;
+		
+		const wrap = document.getElementById('categoryBreak');
+		if (!wrap) return;
+		wrap.innerHTML = '';
 	
-	const wrap = document.getElementById('categoryBreak');
-	if (!wrap) return;
-	wrap.innerHTML = '';
-	
-	try {
-		const { items = [] } = await fetchMonthlyCats(y, m);
-	
-		if (!items.length) {
-		const span = document.createElement('span');
-		span.className = 'pill';
-		span.textContent = '지출 데이터 없음';
-		wrap.appendChild(span);
-		return;
+		try {
+			const { items = [] } = await fetchMonthlyCats(y, m);
+		
+			if (!items.length) {
+			const span = document.createElement('span');
+			span.className = 'pill';
+			span.textContent = '지출 데이터 없음';
+			wrap.appendChild(span);
+			return;
+			}
+		
+			items.forEach(({ category, pct }) => {
+			const pill = document.createElement('span');
+			pill.className = 'pill';
+			pill.textContent = `${category} ${Math.round(pct)}%`;
+			wrap.appendChild(pill);
+			});
+		} catch (e) {
+			console.error(e);
+			const span = document.createElement('span');
+			span.className = 'pill';
+			span.textContent = '로드 실패';
+			wrap.appendChild(span);
 		}
-	
-		items.forEach(({ category, pct }) => {
-		const pill = document.createElement('span');
-		pill.className = 'pill';
-		pill.textContent = `${category} ${Math.round(pct)}%`;
-		wrap.appendChild(pill);
+	}
+	  
+	async function fetchWeekly(n = 10) {
+		const res = await fetch(`/api/stats/weekly?n=${n}`);
+		if (!res.ok) throw new Error('weekly api failed');
+		const data = await res.json();
+		data.net = (data.net || []).map(v => Number(v) || 0);
+		return data;
+	}
+	  
+	async function updateWeeklySection() {
+		const n = 10;
+		const { labels = [], net = [] } = await (await fetch(`/api/stats/weekly?n=${n}`)).json();
+	  
+		// KPI
+		document.getElementById('wtSum').textContent =
+		  (Math.round(net.reduce((a,b) => a + b, 0))).toLocaleString('ko-KR') + '원';
+	  
+		// 차트
+		const canvas = document.getElementById('chartWeekly');
+		renderChart(canvas, [{
+			label: '주간 순변화 (수입 - 지출)',
+			data: net,
+			borderColor: '#3b82f6',
+			backgroundColor: 'rgba(59,130,246,0.15)',
+			borderWidth: 3,
+			tension: 0.3,
+			fill: true,
+			pointRadius: 0
+		}], labels, {
+			plugins: {
+				tooltip: { callbacks: { label: (ctx) => (Math.round(ctx.parsed.y)).toLocaleString('ko-KR')+'원' } }
+			},
+		  	scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('ko-KR') } } }
 		});
-	} catch (e) {
-		console.error(e);
-		const span = document.createElement('span');
-		span.className = 'pill';
-		span.textContent = '로드 실패';
-		wrap.appendChild(span);
-	}
-	}
+	  }
+	  
 	  
 
 	function renderBalance() {
@@ -332,8 +318,8 @@ console.log('statistics.js loaded');
 	async function init() {
 		bindTabs();
 		renderBalance();
-		await updateMonthlyTotalSection();  // Chart.js (합계 = 지출+수입)
-		await updateMonthlySpendSection();  // Chart.js (이번달 vs 지난달 지출)
+		await updateMonthlyTotalSection();  
+		await updateMonthlySpendSection();  
 		await updateWeeklySection(); 
 		updateBalanceCard();
 		updateCategoryPills();
