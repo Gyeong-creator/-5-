@@ -189,3 +189,9 @@ svg{
 .hidden{
 	display:none
 }
+
+
+
+
+.chart { height: 260px; }
+.chart canvas { width: 100% !important; height: 100% !important; }

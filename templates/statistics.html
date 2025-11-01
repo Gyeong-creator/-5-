@@ -7,6 +7,8 @@
     <title>가계부 통계</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/statistics.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
     <script src="{{ url_for('static', filename='js/statistics.js') }}"></script>
 
 </head>
@@ -23,7 +25,7 @@
 
     <main class="wrap">
 
-       
+
 
         <!-- 월간 합계 -->
         <section class="card narrow panel" id="monthlyTotal">
@@ -33,7 +35,7 @@
                 <div class="big" id="mtSum">0원</div>
                 <div class="delta" id="mtDelta"></div>
             </div>
-            <div class="chart" id="chartMonthlyTotal"></div>
+            <div class="chart"><canvas id="chartMonthlyTotal"></canvas></div>
             <div class="legend"><span><span class="box primary"></span>이번달</span></div>
         </section>
 
@@ -45,7 +47,7 @@
                 <div class="big" id="msSum">0원</div>
                 <div class="delta" id="msDelta">지난달보다 0원 더 쓰는 중</div>
             </div>
-            <div class="chart" id="chartMonthlySpend"></div>
+            <div class="chart"><canvas id="chartMonthlySpend"></canvas></div>
             <div class="legend">
                 <span><span class="box primary"></span>이번달</span>
                 <span><span class="box grey"></span>지난달</span>
@@ -60,12 +62,12 @@
             <h3>주간 합계</h3>
             <div class="sub">최근 10주</div>
             <div class="kpi"><div class="big" id="wtSum">0원</div></div>
-            <div class="chart" id="chartWeekly"></div>
+            <div class="chart"><canvas id="chartWeekly"></canvas></div>
             <div class="legend"><span><span class="box primary"></span>주간 합계</span></div>
         </section>
 
-         <!-- 이번 달 남은 돈 카드 -->
-         <section class="card narrow" id="balanceCard">
+        <!-- 이번 달 남은 돈 카드 -->
+        <section class="card narrow" id="balanceCard">
             <div class="card-head">
                 <h3>이번 달 남은 돈</h3>
                 <div class="sub" id="balanceAsOf">이번 달 기준</div>
