@@ -1,6 +1,7 @@
 import modules.user as user_db
 import modules.ledger as ledger_db
 import modules.config as config
+from modules.ledger import select_ledger_by_user, select_transactions_by_date
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from datetime import timedelta
 from functools import wraps
@@ -88,6 +89,30 @@ def get_transactions():
             
     return jsonify({'transactions': transactions_list})
 
+@app.route('/transactions-by-date')
+def get_transactions_by_date():
+    """
+    [새 기능] 날짜별 조회 API: 'date' 파라미터를 받아 해당 날짜의 내역만 반환
+    """
+    user_id = session.get('id') # 로그인 세션 ID
+    if not user_id:
+        return jsonify(success=False, message='Login required'), 401
+
+    # URL 쿼리 파라미터에서 'date' 값을 가져옵니다. (예: ...?date=2025-10-29)
+    selected_date = request.args.get('date')
+    if not selected_date:
+        return jsonify({"error": "Date parameter is required"}), 400
+
+    # DB에서 해당 날짜의 데이터만 조회
+    transactions_list = ledger_db.select_transactions_by_date(user_id, selected_date)
+    
+    # 날짜 객체 문자열로 변환
+    for item in transactions_list:
+        if 'date' in item and hasattr(item['date'], 'isoformat'):
+            item['date'] = item['date'].isoformat()
+    
+    # JS가 기대하는 {'transactions': [...]} 형태로 반환
+    return jsonify({'transactions': transactions_list})
 
 @app.route('/add', methods=['POST'])
 def add_transaction():

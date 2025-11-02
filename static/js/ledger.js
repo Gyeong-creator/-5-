@@ -11,27 +11,13 @@ const currentMonthTitle = document.getElementById('current-month');
 // 상태 관리
 let selectedDate = null;
 let currentDate = new Date();
-let allTransactions = [];
+
 
 // 페이지가 처음 로드될 때 실행될 함수
 document.addEventListener('DOMContentLoaded', async () => {
     renderCalendar(currentDate);
-    await loadInitialData();
 });
 
-/**
- * 서버에서 모든 거래 내역을 불러와 allTransactions 배열에 저장합니다.
- */
-async function loadInitialData() {
-    const res = await fetch('/transactions');
-    if (!res.ok) {                     
-        console.warn('loadInitialData fail', res.status);
-        allTransactions = [];
-        return;
-    }
-    const data = await res.json();
-    allTransactions = data.transactions || [];
-}
 
 /**
  * 달력을 생성하고 화면에 렌더링하는 함수
@@ -62,21 +48,39 @@ function renderCalendar(date) {
 }
 
 /**
- * 날짜를 선택했을 때 호출되는 함수
+ * (!!!) 날짜를 선택했을 때 호출되는 함수 (API 호출로 변경)
  */
-function selectDate(year, month, day) {
-  document.getElementById('input-container').classList.remove('centered-prompt');
-  listDiv.style.display = 'block';
+async function selectDate(year, month, day) {
+    document.getElementById('input-container').classList.remove('centered-prompt');
+    listDiv.style.display = 'block';
 
-  const monthStr = String(month + 1).padStart(2, '0');
-  const dayStr = String(day).padStart(2, '0');
-  selectedDate = `${year}-${monthStr}-${dayStr}`;
-  
-  inputTitle.textContent = `${selectedDate} 내역 입력`;
-  form.style.display = 'flex';
+    const monthStr = String(month + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    selectedDate = `${year}-${monthStr}-${dayStr}`;
+    
+    inputTitle.textContent = `${selectedDate} 내역 입력`;
+    form.style.display = 'flex';
 
-  const filteredTransactions = allTransactions.filter(t => t.date === selectedDate);
-  updateList(filteredTransactions);
+    // (!!!) 기존 allTransactions.filter 대신 API를 직접 호출합니다.
+    try {
+        // app.py에 만든 새 API 경로를 호출합니다.
+        const res = await fetch(`/transactions-by-date?date=${selectedDate}`);
+        
+        if (!res.ok) {
+            // 서버가 401(로그인 필요) 등 에러를 보낸 경우
+            const errorData = await res.json();
+            throw new Error(errorData.message || '데이터를 불러오는 데 실패했습니다.');
+        }
+
+        const data = await res.json();
+        
+        // (!!!) API 응답 결과(해당 날짜의 내역)로 리스트를 바로 업데이트합니다.
+        updateList(data.transactions || []); 
+
+    } catch (error) {
+        console.error('Error fetching date-specific transactions:', error);
+        listDiv.innerHTML = `<h3>거래 내역</h3><p style="color: red;">${error.message}</p>`;
+    }
 }
 
 // "이전 달", "다음 달" 버튼 클릭 이벤트
@@ -106,10 +110,13 @@ applyBtn.onclick = async () => {
   });
   
   const data = await res.json();
-  allTransactions = data.transactions;
-
-  const filteredTransactions = allTransactions.filter(t => t.date === selectedDate);
-  updateList(filteredTransactions);
+  
+  // (!!!) '날짜별 조회'로 변경되어 allTransactions 대신
+  // (!!!) 현재 선택된 날짜의 목록만 다시 불러옵니다.
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  const currentDay = parseInt(selectedDate.split('-')[2]);
+  await selectDate(currentYear, currentMonth, currentDay);
 };
 
 // 삭제 버튼 클릭을 감지하는 이벤트 리스너
@@ -123,7 +130,6 @@ listDiv.addEventListener('click', function(event) {
 
 /**
  * 서버에 삭제 요청을 보내고, UI를 업데이트하는 함수
- * @param {object} transactionToDelete - 삭제할 거래 내역 객체
  */
 async function handleDelete(transactionToDelete) {
     const res = await fetch('/delete', {
@@ -132,10 +138,13 @@ async function handleDelete(transactionToDelete) {
         body: JSON.stringify(transactionToDelete)
     });
     const data = await res.json();
-    allTransactions = data.transactions;
 
-    const filtered = allTransactions.filter(t => t.date === selectedDate);
-    updateList(filtered);
+    // (!!!) '날짜별 조회'로 변경되어 allTransactions 대신
+    // (!!!) 현재 선택된 날짜의 목록만 다시 불러옵니다.
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const currentDay = parseInt(selectedDate.split('-')[2]);
+    await selectDate(currentYear, currentMonth, currentDay);
 }
 
 /**
@@ -156,9 +165,11 @@ function updateList(transactions) {
       <tbody>
         ${transactions.map(t => {
           const transactionData = JSON.stringify(t);
+          // (!!!) 날짜 형식을 DB에서 온 그대로(ISO) 표시하지 않고,
+          // (!!!) selectedDate (YYYY-MM-DD)를 사용합니다. (또는 t.date를 파싱)
           return `
             <tr>
-              <td>${t.date}</td>
+              <td>${selectedDate}</td> 
               <td>${t.type}</td>
               <td>${t.desc}</td>
               <td class="${t.type === '입금' ? 'deposit' : ''}">
