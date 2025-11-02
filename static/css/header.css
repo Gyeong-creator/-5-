@@ -1,0 +1,26 @@
+/* 헤더: 좌측 링크, 우측 사용자/로그아웃 */
+.topbar{
+	display:flex; 
+	align-items:center; 
+	justify-content:space-between;
+	padding:18px 20px 10px;
+}
+.brand-link{
+	font-weight:800; 
+	color:#1f2a44; 
+	text-decoration:none;
+}
+.topbar .right{
+	display:flex; 
+	align-items:center; 
+	gap:10px
+}
+.user{
+	color:#1f2a44; 
+	font-weight:700
+}
+.logout{
+	color:#64748b; 
+	text-decoration:none; 
+	font-weight:600
+}

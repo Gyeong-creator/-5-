@@ -24,6 +24,11 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadInitialData() {
     const res = await fetch('/transactions');
+    if (!res.ok) {                     
+        console.warn('loadInitialData fail', res.status);
+        allTransactions = [];
+        return;
+    }
     const data = await res.json();
     allTransactions = data.transactions || [];
 }
@@ -138,6 +143,7 @@ async function handleDelete(transactionToDelete) {
  * @param {Array} transactions - 화면에 표시할 거래 내역 배열
  */
 function updateList(transactions) {
+  console.log(transactions);
   if (transactions.length === 0) {
     listDiv.innerHTML = `<h3>거래 내역</h3><p>해당 날짜의 거래 내역이 없습니다.</p>`;
     return;
