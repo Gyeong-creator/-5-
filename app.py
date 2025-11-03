@@ -93,7 +93,7 @@ def get_transactions():
 def add_transaction():
     """ (수정) 새로운 거래 내역을 DB에 추가합니다. """
     
-    user_id = session.get('user_id')
+    user_id = session.get('id')
     if not user_id:
         return jsonify({'error': '로그인이 필요합니다.'}), 401
         
@@ -126,7 +126,7 @@ def add_transaction():
 def delete_transaction():
     """ (수정) 요청받은 ID의 거래 내역을 DB에서 삭제합니다. """
     
-    user_id = session.get('user_id')
+    user_id = session.get('id')
     if not user_id:
         return jsonify({'error': '로그인이 필요합니다.'}), 401
         
