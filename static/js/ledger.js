@@ -121,23 +121,37 @@ applyBtn.onclick = async () => {
 
 // 삭제 버튼 클릭을 감지하는 이벤트 리스너
 listDiv.addEventListener('click', function(event) {
+    // 클릭된 요소가 .delete-btn 클래스를 가졌는지 확인
     if (event.target.classList.contains('delete-btn')) {
-        const transactionString = event.target.dataset.transaction;
-        const transactionToDelete = JSON.parse(transactionString);
-        handleDelete(transactionToDelete);
+        // (수정) data-transaction이 아닌 data-id 속성에서 ID를 가져옴
+        const transactionId = event.target.dataset.id; 
+        handleDelete(transactionId); // ID를 handleDelete로 전달
     }
 });
 
 /**
- * 서버에 삭제 요청을 보내고, UI를 업데이트하는 함수
+ * (수정) 서버에 삭제 요청을 보내고, UI를 업데이트하는 함수
+ * @param {string} transactionId - 삭제할 거래 내역의 DB ID
  */
-async function handleDelete(transactionToDelete) {
+async function handleDelete(transactionId) {
+    if (!confirm('정말로 이 내역을 삭제하시겠습니까?')) {
+        return;
+    }
+
     const res = await fetch('/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(transactionToDelete)
+        // (수정) DB ID만 전송
+        body: JSON.stringify({ id: transactionId }) 
     });
+    
     const data = await res.json();
+    if (!res.ok) {
+        alert('삭제 실패: ' + (data.error || '알 수 없는 오류'));
+        return;
+    }
+    
+    allTransactions = data.transactions;
 
     // (!!!) '날짜별 조회'로 변경되어 allTransactions 대신
     // (!!!) 현재 선택된 날짜의 목록만 다시 불러옵니다.
@@ -148,11 +162,10 @@ async function handleDelete(transactionToDelete) {
 }
 
 /**
- * 거래 내역 리스트 업데이트 함수
- * @param {Array} transactions - 화면에 표시할 거래 내역 배열
+ * (수정) 거래 내역 리스트 업데이트 함수
  */
 function updateList(transactions) {
-  console.log(transactions);
+  console.log(transactions); // (디버깅용)
   if (transactions.length === 0) {
     listDiv.innerHTML = `<h3>거래 내역</h3><p>해당 날짜의 거래 내역이 없습니다.</p>`;
     return;
@@ -164,19 +177,17 @@ function updateList(transactions) {
       <thead><tr><th>날짜</th><th>유형</th><th>내역</th><th>금액</th><th></th></tr></thead>
       <tbody>
         ${transactions.map(t => {
-          const transactionData = JSON.stringify(t);
-          // (!!!) 날짜 형식을 DB에서 온 그대로(ISO) 표시하지 않고,
-          // (!!!) selectedDate (YYYY-MM-DD)를 사용합니다. (또는 t.date를 파싱)
+          const transactionId = t.id; 
           return `
             <tr>
               <td>${selectedDate}</td> 
               <td>${t.type}</td>
-              <td>${t.desc}</td>
+              <td>${t.description}</td>
               <td class="${t.type === '입금' ? 'deposit' : ''}">
                 ${parseInt(t.amount).toLocaleString()} 원
               </td>
               <td>
-                <button class="delete-btn" data-transaction='${transactionData}'>&times;</button>
+                <button class="delete-btn" data-id='${transactionId}'>&times;</button>
               </td>
             </tr>
           `;
