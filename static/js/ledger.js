@@ -11,7 +11,7 @@ const currentMonthTitle = document.getElementById('current-month');
 // 상태 관리
 let selectedDate = null;
 let currentDate = new Date();
-let allTransactions = []; // (이전 버전 호환용, 현재는 사용 안 함)
+// allTransactions 배열은 '날짜별 조회' 기능으로 대체되었으므로 삭제합니다.
 
 // 페이지가 처음 로드될 때 실행될 함수
 document.addEventListener('DOMContentLoaded', async () => {
@@ -71,11 +71,7 @@ async function selectDate(year, month, day) {
     form.style.display = 'flex';
 
     // (!!!) 날짜를 클릭하면 해당 날짜의 API를 호출
-    // (이 부분은 팀원이 구현한 '날짜별 조회' 로직입니다)
     try {
-        // (주의) 만약 팀원이 '/transactions-by-date' API를 만들지 않았다면
-        // 이 부분 대신 '/transactions'를 호출하고 JS에서 필터링해야 합니다.
-        // (현재 코드는 팀원이 '날짜별 조회'를 구현했다는 가정 하에 작성되었습니다.)
         const res = await fetch(`/transactions-by-date?date=${selectedDate}`);
         if (!res.ok) {
             const errorData = await res.json();
@@ -276,7 +272,7 @@ function updateList(transactions) {
 
             // (주의) DB에서 날짜가 'YYYY-MM-DD' 형식이 아니라 
             // 'datetime' 객체로 온다면, t.date.split('T')[0] 등으로 잘라야 할 수 있습니다.
-            const displayDate = t.date.split('T')[0]; // 예: "2025-11-04T..." -> "2025-11-04"
+            const displayDate = (t.date || '').split('T')[0]; // 예: "2025-11-04T..." -> "2025-11-04"
 
             return `
                 <tr data-id="${transactionId}">
