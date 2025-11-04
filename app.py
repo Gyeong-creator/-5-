@@ -149,7 +149,45 @@ def delete_transaction():
 
     return jsonify({"error": "Request must be JSON"}), 400
 
+@app.route('/edit', methods=['POST'])
+def edit_transaction():
+    """ (신규) 요청받은 ID의 거래 내역을 DB에서 수정합니다. """
+    
+    user_id = session.get('id')
+    if not user_id:
+        return jsonify({'error': '로그인이 필요합니다.'}), 401
+        
+    if request.is_json:
+        data = request.get_json()
+        
+        # JS에서 보낼 4가지 새 값 + 1개 ID
+        transaction_id = data.get('id')
+        new_date = data.get('date')
+        new_type = data.get('type')
+        new_desc = data.get('desc') # JS에서 'desc'로 보냅니다
+        new_amount = data.get('amount')
 
+        if not all([transaction_id, new_date, new_type, new_desc, new_amount is not None]):
+             return jsonify({'error': '모든 값이 필요합니다.'}), 400
+
+        try:
+            # modules/ledger.py 에 새로 만들 함수
+            ledger_db.update_transaction(
+                transaction_id, 
+                user_id, 
+                new_date, 
+                new_type, 
+                new_desc, 
+                new_amount
+            )
+            
+            # JS가 스스로 목록을 새로고침하므로, 성공 메시지만 반환
+            return jsonify({'success': True})
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    return jsonify({"error": "Request must be JSON"}), 400
 
 # ====================== auth ======================
 @app.route('/login_check', methods=['POST'])
