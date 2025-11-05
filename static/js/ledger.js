@@ -11,7 +11,6 @@ const currentMonthTitle = document.getElementById('current-month');
 // 상태 관리
 let selectedDate = null;
 let currentDate = new Date();
-// allTransactions 배열은 '날짜별 조회' 기능으로 대체되었으므로 삭제합니다.
 
 // 페이지가 처음 로드될 때 실행될 함수
 document.addEventListener('DOMContentLoaded', async () => {
@@ -131,7 +130,7 @@ applyBtn.onclick = async () => {
     await refreshCurrentList();
 };
 
-// (신규) '삭제', '수정', '저장' 버튼 클릭을 감지하는 이벤트 리스너
+// (신규) '삭제', '수정', '저장', '취소' 버튼 클릭을 감지하는 이벤트 리스너
 listDiv.addEventListener('click', async function(event) {
     const target = event.target;
     const tr = target.closest('tr'); // 버튼이 속한 행(tr)
@@ -146,16 +145,21 @@ listDiv.addEventListener('click', async function(event) {
         }
     }
     
-    // '수정' 버튼 클릭 시 (신규)
+    // '수정' 버튼 클릭 시
     if (target.classList.contains('edit-btn')) {
         toggleEditMode(tr, true); // 수정 모드로 변경
     }
     
-    // '저장' 버튼 클릭 시 (신규)
+    // '저장' 버튼 클릭 시
     if (target.classList.contains('save-btn')) {
         if (transactionId) {
             await handleSave(tr, transactionId);
         }
+    }
+
+    // (신규) '취소' 버튼 클릭 시
+    if (target.classList.contains('cancel-btn')) {
+        toggleEditMode(tr, false); // '표시 모드'로 되돌리기
     }
 });
 
@@ -171,6 +175,7 @@ function toggleEditMode(tr, isEditing) {
     const editBtn = tr.querySelector('.edit-btn');
     const deleteBtn = tr.querySelector('.delete-btn');
     const saveBtn = tr.querySelector('.save-btn');
+    const cancelBtn = tr.querySelector('.cancel-btn'); // (신규) 취소 버튼 찾기
 
     // 모드에 따라 숨기거나 보여줍니다.
     displayFields.forEach(f => f.style.display = isEditing ? 'none' : '');
@@ -179,6 +184,7 @@ function toggleEditMode(tr, isEditing) {
     editBtn.style.display = isEditing ? 'none' : '';
     deleteBtn.style.display = isEditing ? 'none' : '';
     saveBtn.style.display = isEditing ? '' : 'none';
+    cancelBtn.style.display = isEditing ? '' : 'none'; // (신규) 취소 버튼 숨김/표시
 }
 
 /**
@@ -269,9 +275,6 @@ function updateList(transactions) {
         ${transactions.map(t => {
             const transactionId = t.id; 
             const amount = parseInt(t.amount); // 금액 파싱
-
-            // (주의) DB에서 날짜가 'YYYY-MM-DD' 형식이 아니라 
-            // 'datetime' 객체로 온다면, t.date.split('T')[0] 등으로 잘라야 할 수 있습니다.
             const displayDate = (t.date || '').split('T')[0]; // 예: "2025-11-04T..." -> "2025-11-04"
 
             return `
@@ -301,8 +304,9 @@ function updateList(transactions) {
                     </td>
                     
                     <td>
-                        <button class="edit-btn">&#9999;</button>
+                        <button class="edit-btn">&#9999;</button> 
                         <button class="save-btn" style="display:none;">저장</button>
+                        <button class="cancel-btn" style="display:none;">취소</button>
                         <button class="delete-btn" data-id='${transactionId}'>&times;</button>
                     </td>
                 </tr>
