@@ -1,6 +1,7 @@
 import modules.user as user_db
 import modules.ledger as ledger_db
 import modules.config as config
+from modules.ledger import select_ledger_by_user, select_transactions_by_date
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from datetime import timedelta
 from functools import wraps
@@ -88,6 +89,30 @@ def get_transactions():
             
     return jsonify({'transactions': transactions_list})
 
+@app.route('/transactions-by-date')
+def get_transactions_by_date():
+    """
+    [새 기능] 날짜별 조회 API: 'date' 파라미터를 받아 해당 날짜의 내역만 반환
+    """
+    user_id = session.get('id') # 로그인 세션 ID
+    if not user_id:
+        return jsonify(success=False, message='Login required'), 401
+
+    # URL 쿼리 파라미터에서 'date' 값을 가져옵니다. (예: ...?date=2025-10-29)
+    selected_date = request.args.get('date')
+    if not selected_date:
+        return jsonify({"error": "Date parameter is required"}), 400
+
+    # DB에서 해당 날짜의 데이터만 조회
+    transactions_list = ledger_db.select_transactions_by_date(user_id, selected_date)
+    
+    # 날짜 객체 문자열로 변환
+    for item in transactions_list:
+        if 'date' in item and hasattr(item['date'], 'isoformat'):
+            item['date'] = item['date'].isoformat()
+    
+    # JS가 기대하는 {'transactions': [...]} 형태로 반환
+    return jsonify({'transactions': transactions_list})
 
 @app.route('/add', methods=['POST'])
 def add_transaction():
@@ -149,7 +174,45 @@ def delete_transaction():
 
     return jsonify({"error": "Request must be JSON"}), 400
 
+@app.route('/edit', methods=['POST'])
+def edit_transaction():
+    """ (신규) 요청받은 ID의 거래 내역을 DB에서 수정합니다. """
+    
+    user_id = session.get('id')
+    if not user_id:
+        return jsonify({'error': '로그인이 필요합니다.'}), 401
+        
+    if request.is_json:
+        data = request.get_json()
+        
+        # JS에서 보낼 4가지 새 값 + 1개 ID
+        transaction_id = data.get('id')
+        new_date = data.get('date')
+        new_type = data.get('type')
+        new_desc = data.get('desc') # JS에서 'desc'로 보냅니다
+        new_amount = data.get('amount')
 
+        if not all([transaction_id, new_date, new_type, new_desc, new_amount is not None]):
+             return jsonify({'error': '모든 값이 필요합니다.'}), 400
+
+        try:
+            # modules/ledger.py 에 새로 만들 함수
+            ledger_db.update_transaction(
+                transaction_id, 
+                user_id, 
+                new_date, 
+                new_type, 
+                new_desc, 
+                new_amount
+            )
+            
+            # JS가 스스로 목록을 새로고침하므로, 성공 메시지만 반환
+            return jsonify({'success': True})
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    return jsonify({"error": "Request must be JSON"}), 400
 
 # ====================== auth ======================
 @app.route('/login_check', methods=['POST'])
