@@ -3,8 +3,9 @@ import modules.ledger as ledger_db
 import modules.config as config
 from modules.ledger import select_ledger_by_user, select_transactions_by_date
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
-from datetime import timedelta
+from datetime import timedelta, date
 from functools import wraps
+from calendar import monthrange
 
 # ====================== flask & session & setting values ======================
 app = Flask(__name__)
@@ -174,7 +175,45 @@ def delete_transaction():
 
     return jsonify({"error": "Request must be JSON"}), 400
 
+@app.route('/edit', methods=['POST'])
+def edit_transaction():
+    """ (신규) 요청받은 ID의 거래 내역을 DB에서 수정합니다. """
+    
+    user_id = session.get('id')
+    if not user_id:
+        return jsonify({'error': '로그인이 필요합니다.'}), 401
+        
+    if request.is_json:
+        data = request.get_json()
+        
+        # JS에서 보낼 4가지 새 값 + 1개 ID
+        transaction_id = data.get('id')
+        new_date = data.get('date')
+        new_type = data.get('type')
+        new_desc = data.get('desc') # JS에서 'desc'로 보냅니다
+        new_amount = data.get('amount')
 
+        if not all([transaction_id, new_date, new_type, new_desc, new_amount is not None]):
+             return jsonify({'error': '모든 값이 필요합니다.'}), 400
+
+        try:
+            # modules/ledger.py 에 새로 만들 함수
+            ledger_db.update_transaction(
+                transaction_id, 
+                user_id, 
+                new_date, 
+                new_type, 
+                new_desc, 
+                new_amount
+            )
+            
+            # JS가 스스로 목록을 새로고침하므로, 성공 메시지만 반환
+            return jsonify({'success': True})
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    return jsonify({"error": "Request must be JSON"}), 400
 
 # ====================== auth ======================
 @app.route('/login_check', methods=['POST'])
@@ -203,6 +242,64 @@ def logout():
     session.clear() 
     return redirect(url_for('login_view'))
     
+
+
+
+
+@app.route('/api/stats/monthly-total')
+def stats_monthly_total():
+    user_id = session.get('id')
+
+    today = date.today()
+    year = int(request.args.get('year', today.year))
+    month = int(request.args.get('month', today.month))
+
+    days = monthrange(year, month)[1]
+    start = date(year, month, 1)
+    end = date(year + (month == 12), 1 if month == 12 else month + 1, 1)
+
+    data = ledger_db.select_month_ledger_by_user(user_id, year, month, days, start, end)
+    return jsonify(data)  
+
+
+@app.route('/api/stats/monthly-spend')
+def stats_monthly_spend():
+    user_id = session.get('id')
+
+    today = date.today()
+    year = int(request.args.get('year', today.year))
+    month = int(request.args.get('month', today.month))
+
+    days = monthrange(year, month)[1]
+    start = date(year, month, 1)
+    end = date(year + (month == 12), 1 if month == 12 else month + 1, 1)
+
+    data = ledger_db.select_month_daily_spend_income(user_id, start, end, year, month, days)
+    return jsonify(data)
+
+
+@app.route('/api/stats/monthly-cats')
+def stats_monthly_cats():
+    user_id = session.get('id')
+
+    today = date.today()
+    year  = int(request.args.get('year',  today.year))
+    month = int(request.args.get('month', today.month))
+
+    days  = monthrange(year, month)[1]
+    start = date(year, month, 1)
+    end   = date(year + (month == 12), 1 if month == 12 else month + 1, 1)
+
+    data = ledger_db.select_month_category_spend(user_id, start, end)
+    return jsonify(data)
+
+
+@app.route('/api/stats/weekly')
+def stats_weekly():
+    user_id = session.get('id')
+    n = int(request.args.get('n', 10))
+    data = ledger_db.select_recent_weeks(user_id, n)
+    return jsonify(data)
 
 
 # ====================== server ======================
