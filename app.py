@@ -3,8 +3,9 @@ import modules.ledger as ledger_db
 import modules.config as config
 from modules.ledger import select_ledger_by_user, select_transactions_by_date
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
-from datetime import timedelta
+from datetime import timedelta, date
 from functools import wraps
+from calendar import monthrange
 
 # ====================== flask & session & setting values ======================
 app = Flask(__name__)
@@ -241,6 +242,64 @@ def logout():
     session.clear() 
     return redirect(url_for('login_view'))
     
+
+
+
+
+@app.route('/api/stats/monthly-total')
+def stats_monthly_total():
+    user_id = session.get('id')
+
+    today = date.today()
+    year = int(request.args.get('year', today.year))
+    month = int(request.args.get('month', today.month))
+
+    days = monthrange(year, month)[1]
+    start = date(year, month, 1)
+    end = date(year + (month == 12), 1 if month == 12 else month + 1, 1)
+
+    data = ledger_db.select_month_ledger_by_user(user_id, year, month, days, start, end)
+    return jsonify(data)  
+
+
+@app.route('/api/stats/monthly-spend')
+def stats_monthly_spend():
+    user_id = session.get('id')
+
+    today = date.today()
+    year = int(request.args.get('year', today.year))
+    month = int(request.args.get('month', today.month))
+
+    days = monthrange(year, month)[1]
+    start = date(year, month, 1)
+    end = date(year + (month == 12), 1 if month == 12 else month + 1, 1)
+
+    data = ledger_db.select_month_daily_spend_income(user_id, start, end, year, month, days)
+    return jsonify(data)
+
+
+@app.route('/api/stats/monthly-cats')
+def stats_monthly_cats():
+    user_id = session.get('id')
+
+    today = date.today()
+    year  = int(request.args.get('year',  today.year))
+    month = int(request.args.get('month', today.month))
+
+    days  = monthrange(year, month)[1]
+    start = date(year, month, 1)
+    end   = date(year + (month == 12), 1 if month == 12 else month + 1, 1)
+
+    data = ledger_db.select_month_category_spend(user_id, start, end)
+    return jsonify(data)
+
+
+@app.route('/api/stats/weekly')
+def stats_weekly():
+    user_id = session.get('id')
+    n = int(request.args.get('n', 10))
+    data = ledger_db.select_recent_weeks(user_id, n)
+    return jsonify(data)
 
 
 # ====================== server ======================
