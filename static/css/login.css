@@ -8,7 +8,7 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    /* (수정) font-family, background-color 등은 common.css가 처리하므로 삭제 */
+    /* (수정) font-family 덮어쓰기 삭제 -> common.css 상속 */
 }
 
 .login-container {
@@ -17,12 +17,12 @@
     border-radius: 10px;
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
     text-align: center;
-    width: 380px;
+    width: 390px;
 }
 
 .logo {
-    font-size: 45px;
-    color: var(--accent); /* (수정) 공용 변수 사용 */
+    font-size: 45px; /* (고유 크기 유지) */
+    color: #007bff;
     margin-bottom: 20px;
 }
 
@@ -43,7 +43,7 @@
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: var(--font-size-base); /* (수정) 14px -> 변수 */
     box-sizing: border-box;
 }
 
@@ -57,25 +57,25 @@
     right: 15px;
     transform: translateY(-50%);
     cursor: pointer;
-    color: var(--accent); /* (수정) 공용 변수 사용 */
+    color: #007bff;
     user-select: none;
-    font-size: 13px;
+    font-size: var(--font-size-sm); /* (수정) 13px -> 변수 */
     font-weight: 600;
 }
 
 .btn {
     width: 100%;
     padding: 12px;
-    background: var(--accent); /* (수정) 공용 변수 사용 */
+    background: #007bff;
     border: none;
     border-radius: 6px;
-    color: white;
-    font-size: 16px;
+    color: #fff;
+    font-size: var(--font-size-lg); /* (수정) 16px -> 변수 */
     cursor: pointer;
     transition: background 0.3s ease;
     box-sizing: border-box;
 }
 
 .btn:hover {
-    background: var(--accent-hover); /* (수정) 공용 변수 사용 */
+    background: #0056b3;
 }
