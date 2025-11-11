@@ -1,5 +1,5 @@
 import pymysql
-from .user import db_connector # user.py에서 db_connector를 가져옴
+from modules.user import db_connector # user.py에서 db_connector를 가져옴
 from datetime import timedelta, date
 
 # 특정 유저의 모든 거래 내역을 조회

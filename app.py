@@ -1,6 +1,6 @@
 import modules.user as user_db
 import modules.ledger as ledger_db
-import modules.config as config
+import py.config as config
 from modules.ledger import select_ledger_by_user, select_transactions_by_date
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from datetime import timedelta, date
