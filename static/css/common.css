@@ -1,0 +1,124 @@
+/* ===================================================================
+   공용 디자인 시스템 (Design System)
+   - :root 변수, *, body, 기본 레이아웃(.wrap, .card), 헤더(.topbar)
+   =================================================================== */
+
+/* (statistics.css에서 가져옴) */
+:root {
+    --bg: #f5f9ff; /* (로그인 페이지 색상 #f5f9ff로 변경) */
+    --surface: #ffffff;
+    --border: #e8eef7;
+    --muted: #8a94a7;
+    --text: #24324a;
+    
+    --accent: #007bff;
+    --accent-hover: #0056b3;
+
+    /* (statistics.css의 변수 계속) */
+    --accent2: #b8c3d9;
+    --good: #10b981;
+    --danger: #ef4444;
+    --radius: 18px;
+    --shadow: 0 12px 32px rgba(43, 71, 140, .12);
+    
+    /* (statistics.css의 글꼴로 통일) */
+    --font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", "맑은 고딕", Arial, Helvetica, sans-serif;
+}
+
+/* (statistics.css에서 가져옴) */
+* {
+    box-sizing: border-box;
+}
+
+/* (statistics.css에서 가져옴) - 전역 폰트 및 배경색 */
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-family);
+}
+
+/* (statistics.css에서 가져옴) - 공용 레이아웃 */
+.wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 16px 64px;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+    margin: 14px auto;
+}
+
+.card h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+/* (header.css에서 가져옴) - 공용 헤더 */
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 10px;
+}
+
+.brand-link {
+    font-weight: 800;
+    color: #1f2a44;
+    text-decoration: none;
+}
+
+.topbar .right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user {
+    color: #1f2a44;
+    font-weight: 700;
+}
+
+.logout {
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+td .save-btn,
+td .cancel-btn {
+    display: inline-block; /* 가로 정렬 강제 */
+    width: auto;           /* 버튼 크기 자동 조절 */
+    padding: 3px 8px;      /* 작은 크기로 덮어쓰기 */
+    font-size: 0.8em;      /* 작은 글씨로 덮어쓰기 */
+    font-weight: 600;
+    border-radius: 10px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* '저장' 버튼 색상 */
+.save-btn {
+    background-color: var(--accent);
+    color: var(--text-light);
+    border: none;
+}
+.save-btn:hover {
+    background-color: var(--accent-hover);
+}
+
+/* '취소' 버튼 원본 스타일 */
+.cancel-btn {
+    background-color: #ffffff;
+    color: #555;
+    border: 1px solid #ccc;
+}
+.cancel-btn:hover {
+    background-color: #f5f5f5;
+}

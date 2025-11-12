@@ -4,18 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Page</title>
+  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
-<body>
+
+<body class="login-body">
   <div class="login-container">
     <div class="logo">🔒</div>
     <h2>Login</h2>
     <form>
-      <!-- ID 입력 필드 -->
       <div class="input-container">
         <input type="text" placeholder="Enter your ID" class="input-field" required id="id-field">
       </div>
-      <!-- 비밀번호 입력 필드와 아이콘 -->
       <div class="input-container">
         <input type="password" placeholder="Enter your password" id="password-field" class="input-field" required>
         <span class="toggle-password" id="toggle-password">보기</span>
@@ -24,9 +25,7 @@
     </form>
   </div>
 
-  <!-- --- 3. 아이콘 클릭 이벤트를 위한 JavaScript 추가 --- -->
   <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 
 </body>
 </html>
-
