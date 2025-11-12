@@ -1,10 +1,8 @@
 import modules.user as user_db
 import modules.ledger as ledger_db
 import modules.config as config
-from modules.ledger import select_ledger_by_user, select_transactions_by_date
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import timedelta, date
-from functools import wraps
 from calendar import monthrange
 
 # ====================== flask & session & setting values ======================
@@ -214,6 +212,7 @@ def edit_transaction():
             return jsonify({'error': str(e)}), 500
 
     return jsonify({"error": "Request must be JSON"}), 400
+
 
 # ====================== auth ======================
 @app.route('/login_check', methods=['POST'])
