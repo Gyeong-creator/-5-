@@ -1,5 +1,5 @@
 import pymysql
-from py import config
+from . import config
 
 def db_connector():
     try:
