@@ -3,34 +3,38 @@
    - :root 변수, *, body, 기본 레이아웃(.wrap, .card), 헤더(.topbar)
    =================================================================== */
 
-/* (statistics.css에서 가져옴) */
+/* :root는 문서 전체에서 사용할 전역 변수를 선언합니다. */
 :root {
-    --bg: #f5f9ff; /* (로그인 페이지 색상 #f5f9ff로 변경) */
-    --surface: #ffffff;
-    --border: #e8eef7;
-    --muted: #8a94a7;
-    --text: #24324a;
+    /* --- 기본 색상 팔레트 --- */
+    --bg: #f5f9ff; /* 페이지 배경색 (로그인 페이지와 동일) */
+    --surface: #ffffff; /* 카드 등 표면 색상 (흰색) */
+    --border: #e8eef7; /* 테두리 색상 */
+    --muted: #8a94a7; /* 보조 텍스트 색상 (연한 회색) */
+    --text: #24324a; /* 기본 텍스트 색상 (진한 회색) */
     
-    --accent: #007bff;
-    --accent-hover: #0056b3;
+    /* --- 강조 색상 --- */
+    --accent: #007bff; /* 주요 강조색 (파란색, 버튼 등) */
+    --accent-hover: #0056b3; /* 강조색 위에 마우스를 올렸을 때 */
 
-    /* (statistics.css의 변수 계속) */
-    --accent2: #b8c3d9;
-    --good: #10b981;
-    --danger: #ef4444;
-    --radius: 18px;
-    --shadow: 0 12px 32px rgba(43, 71, 140, .12);
+    /* --- 상태별 색상 --- */
+    --accent2: #b8c3d9; /* 보조 강조색 */
+    --good: #10b981; /* 성공 (녹색) */
+    --danger: #ef4444; /* 위험/삭제 (붉은색) */
     
-    /* (statistics.css의 글꼴로 통일) */
+    /* --- 공용 스타일 --- */
+    --radius: 18px; /* 둥근 모서리 값 */
+    --shadow: 0 12px 32px rgba(43, 71, 140, .12); /* 그림자 효과 */
+    
+    /* --- 전역 글꼴 --- */
     --font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Apple SD Gothic Neo", "Noto Sans KR", "맑은 고딕", Arial, Helvetica, sans-serif;
 }
 
-/* (statistics.css에서 가져옴) */
+/* 모든 요소의 box-sizing을 border-box로 통일 (크기 계산을 쉽게 함) */
 * {
     box-sizing: border-box;
 }
 
-/* (statistics.css에서 가져옴) - 전역 폰트 및 배경색 */
+/* body 태그의 기본 스타일 (전역 글꼴, 배경색 적용) */
 body {
     margin: 0;
     background: var(--bg);
@@ -38,13 +42,14 @@ body {
     font-family: var(--font-family);
 }
 
-/* (statistics.css에서 가져옴) - 공용 레이아웃 */
+/* (공용) 콘텐츠를 감싸는 중앙 정렬된 레이아웃 */
 .wrap {
     max-width: 980px;
     margin: 0 auto;
     padding: 0 16px 64px;
 }
 
+/* (공용) 흰색 카드 UI 컴포넌트 (대부분의 콘텐츠를 이 안에 넣음) */
 .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -54,13 +59,14 @@ body {
     margin: 14px auto;
 }
 
+/* 카드 내부의 h3 제목 스타일 */
 .card h3 {
     margin: 0 0 8px;
     font-size: 18px;
     font-weight: 800;
 }
 
-/* (header.css에서 가져옴) - 공용 헤더 */
+/* (공용) 상단 헤더바 스타일 */
 .topbar {
     display: flex;
     align-items: center;
@@ -68,29 +74,35 @@ body {
     padding: 18px 20px 10px;
 }
 
+/* 헤더 좌측 로고/브랜드 링크 */
 .brand-link {
     font-weight: 800;
     color: #1f2a44;
     text-decoration: none;
 }
 
+/* 헤더 우측 영역 (사용자 이름, 로그아웃) */
 .topbar .right {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+/* 헤더 사용자 이름 */
 .user {
     color: #1f2a44;
     font-weight: 700;
 }
 
+/* 헤더 로그아웃 링크 */
 .logout {
     color: #64748b;
     text-decoration: none;
     font-weight: 600;
 }
 
+/* --- (테이블 내 '수정' 기능 버튼 스타일) --- */
+/* 테이블(td) 내부의 '저장', '취소' 버튼에만 적용되는 스타일 */
 td .save-btn,
 td .cancel-btn {
     display: inline-block; /* 가로 정렬 강제 */
@@ -106,14 +118,14 @@ td .cancel-btn {
 /* '저장' 버튼 색상 */
 .save-btn {
     background-color: var(--accent);
-    color: var(--text-light);
+    color: var(--surface); /* var(--text-light) 변수가 없으므로 var(--surface)로 대체 */
     border: none;
 }
 .save-btn:hover {
     background-color: var(--accent-hover);
 }
 
-/* '취소' 버튼 원본 스타일 */
+/* '취소' 버튼 스타일 (기본 버튼 모양) */
 .cancel-btn {
     background-color: #ffffff;
     color: #555;

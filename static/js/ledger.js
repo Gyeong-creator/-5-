@@ -45,7 +45,7 @@ function renderCalendar(date) {
 }
 
 /**
- * (신규) 현재 날짜의 목록을 새로고침하는 헬퍼 함수
+ * 현재 날짜의 목록을 새로고침하는 헬퍼 함수
  */
 async function refreshCurrentList() {
     if (!selectedDate) return;
@@ -56,7 +56,7 @@ async function refreshCurrentList() {
 }
 
 /**
- * 날짜를 선택했을 때 호출되는 함수 (API 호출로 변경됨)
+ * 날짜를 선택했을 때 호출되는 함수
  */
 async function selectDate(year, month, day) {
     document.getElementById('input-container').classList.remove('centered-prompt');
@@ -69,7 +69,7 @@ async function selectDate(year, month, day) {
     inputTitle.textContent = `${selectedDate} 내역 입력`;
     form.style.display = 'flex';
 
-    // (!!!) 날짜를 클릭하면 해당 날짜의 API를 호출
+    // 날짜를 클릭하면 해당 날짜의 API를 호출
     try {
         const res = await fetch(`/transactions-by-date?date=${selectedDate}`);
         if (!res.ok) {
@@ -126,11 +126,11 @@ applyBtn.onclick = async () => {
         alert(error.message); 
     }
     
-    // (변경) 목록 새로고침
+    // 목록 새로고침
     await refreshCurrentList();
 };
 
-// (신규) '삭제', '수정', '저장', '취소' 버튼 클릭을 감지하는 이벤트 리스너
+// '삭제', '수정', '저장', '취소' 버튼 클릭을 감지하는 이벤트 리스너
 listDiv.addEventListener('click', async function(event) {
     const target = event.target;
     const tr = target.closest('tr'); // 버튼이 속한 행(tr)
@@ -157,14 +157,14 @@ listDiv.addEventListener('click', async function(event) {
         }
     }
 
-    // (신규) '취소' 버튼 클릭 시
+    // '취소' 버튼 클릭 시
     if (target.classList.contains('cancel-btn')) {
         toggleEditMode(tr, false); // '표시 모드'로 되돌리기
     }
 });
 
 /**
- * (신규) '수정' <-> '저장' 모드 전환 함수
+ * '수정' <-> '저장' 모드 전환 함수
  */
 function toggleEditMode(tr, isEditing) {
     // tr 안의 모든 '표시용' 필드와 '수정용' 필드를 찾습니다.
@@ -175,7 +175,7 @@ function toggleEditMode(tr, isEditing) {
     const editBtn = tr.querySelector('.edit-btn');
     const deleteBtn = tr.querySelector('.delete-btn');
     const saveBtn = tr.querySelector('.save-btn');
-    const cancelBtn = tr.querySelector('.cancel-btn'); // (신규) 취소 버튼 찾기
+    const cancelBtn = tr.querySelector('.cancel-btn'); // 취소 버튼 찾기
 
     // 모드에 따라 숨기거나 보여줍니다.
     displayFields.forEach(f => f.style.display = isEditing ? 'none' : '');
@@ -184,11 +184,11 @@ function toggleEditMode(tr, isEditing) {
     editBtn.style.display = isEditing ? 'none' : '';
     deleteBtn.style.display = isEditing ? 'none' : '';
     saveBtn.style.display = isEditing ? '' : 'none';
-    cancelBtn.style.display = isEditing ? '' : 'none'; // (신규) 취소 버튼 숨김/표시
+    cancelBtn.style.display = isEditing ? '' : 'none'; // 취소 버튼 숨김/표시
 }
 
 /**
- * (신규) '저장' 버튼 클릭 시 서버로 전송하는 함수
+ * '저장' 버튼 클릭 시 서버로 전송하는 함수
  */
 async function handleSave(tr, transactionId) {
     // 수정용 input/select 에서 새 값 가져오기
@@ -223,13 +223,13 @@ async function handleSave(tr, transactionId) {
         alert(err.message);
     }
 
-    // (변경) 목록 새로고침
+    // 목록 새로고침
     await refreshCurrentList();
 }
 
 
 /**
- * '삭제' 함수 (변경: 새로고침 로직 수정)
+ * '삭제' 함수
  */
 async function handleDelete(transactionId) {
     
@@ -253,12 +253,12 @@ async function handleDelete(transactionId) {
         alert(error.message); 
     }
     
-    // (변경) 목록 새로고침
+    // 목록 새로고침
     await refreshCurrentList();
 }
 
 /**
- * (변경) 거래 내역 리스트 업데이트 함수 (수정 기능 추가)
+ * 거래 내역 리스트 업데이트 함수
  */
 function updateList(transactions) {
     console.log(transactions); // (디버깅용)
