@@ -7,7 +7,6 @@
     <title>가계부 통계</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/statistics.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/header.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <script src="{{ url_for('static', filename='js/statistics.js') }}"></script>
 </head>
@@ -24,9 +23,6 @@
     </nav>
 
     <main class="wrap">
-
-
-
         <!-- 월간 합계 -->
         <section class="card narrow panel" id="monthlyTotal">
             <h3>이 달의 합계</h3>
